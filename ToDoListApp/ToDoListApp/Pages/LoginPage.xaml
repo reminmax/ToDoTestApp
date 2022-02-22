@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+             Title="Login"
+             x:Class="ToDoListApp.Pages.LoginPage">
+    
+    <ContentPage.Content>
+
+        <Grid RowDefinitions="Auto,Auto,Auto"
+              Margin="12">
+
+            <!--Email-->
+            <StackLayout Grid.Row="0">
+                <Label Text="Email"/>
+                <Entry Placeholder="Enter your email"
+                       Text="{Binding Email.Value}"/>
+
+                <Label IsVisible="{Binding Email.IsValid, Converter={xct:InvertedBoolConverter}}"
+                       Text="{Binding Email.Errors, Converter={StaticResource FirstValidationErrorConverter}}"
+                       TextColor="{StaticResource FailColor}" />
+            </StackLayout>
+
+            <!--Password-->
+            <StackLayout Grid.Row="1">
+                <Label Text="Password"/>
+                <Entry Placeholder="Enter your password"
+                       Text="{Binding Password.Value}"/>
+
+                <Label IsVisible="{Binding Password.IsValid, Converter={xct:InvertedBoolConverter}}"
+                       Text="{Binding Password.Errors, Converter={StaticResource FirstValidationErrorConverter}}"
+                       TextColor="{StaticResource FailColor}" />
+
+            </StackLayout>
+
+            <Button Grid.Row="2"
+                    Command="{Binding LoginCommand}"
+                    Margin="20,0,20,14"
+                    Text="Login"
+                    Style="{StaticResource ButtonBaseStyle}"
+                    Visual="Material"
+                    xct:TouchEffect.NativeAnimation="True"/>
+
+        </Grid>
+
+    </ContentPage.Content>
+
+</ContentPage>

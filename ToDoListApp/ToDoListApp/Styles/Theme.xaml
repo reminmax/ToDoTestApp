@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://xamarin.com/schemas/2014/forms"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:styles="clr-namespace:ToDoListApp.Styles;assembly=ToDoListApp"
+                    xmlns:iOsSpecific="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
+                    x:Class="ToDoListApp.Styles.Theme">
+
+    <ResourceDictionary.MergedDictionaries>
+        <styles:Colors></styles:Colors>
+        <styles:Fonts></styles:Fonts>
+    </ResourceDictionary.MergedDictionaries>
+
+    <OnPlatform x:TypeArguments="x:Single" x:Key="CornerRadius">
+        <On Platform="Android" Value="12" />
+        <On Platform="iOS" Value="20" />
+    </OnPlatform>
+
+    <!--Button-->
+    <Style x:Key="ButtonBaseStyle" TargetType="Button">
+        <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}" />
+        <Setter Property="TextTransform" Value="None" />
+        <Setter Property="HeightRequest" Value="50" />
+        <Setter Property="Padding" Value="14" />
+        <Setter Property="FontSize" Value="{StaticResource ButtonFontSize}" />
+    </Style>
+
+    <!--Labels-->
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource PrimaryColor}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextDecorations" Value="None" />
+    </Style>
+
+    <!--Grids-->
+    <Style TargetType="Grid">
+        <Setter Property="RowSpacing" Value="0" />
+        <Setter Property="ColumnSpacing" Value="0" />
+    </Style>
+
+    <Style ApplyToDerivedTypes="True" TargetType="ContentPage">
+        <Setter Property="BackgroundColor" Value="{StaticResource BackgroundColor}" />
+        <Setter Property="iOsSpecific:Page.UseSafeArea" Value="True" />
+        <Setter Property="NavigationPage.BackButtonTitle" Value="" />
+    </Style>
+
+</ResourceDictionary>
