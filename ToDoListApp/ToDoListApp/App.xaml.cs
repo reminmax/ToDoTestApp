@@ -1,4 +1,6 @@
 ﻿using System;
+using FreshMvvm;
+using ToDoListApp.PageModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -10,7 +12,9 @@ namespace ToDoListApp
         {
             InitializeComponent();
 
-            MainPage = new MainPage();
+            // Set main page
+            MainPage = new FreshNavigationContainer(
+                FreshPageModelResolver.ResolvePageModel<MainPageModel>());
         }
 
         protected override void OnStart()
