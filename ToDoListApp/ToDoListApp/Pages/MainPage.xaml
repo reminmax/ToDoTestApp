@@ -2,11 +2,190 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+             xmlns:fragments="clr-namespace:ToDoListApp.Pages.Fragments;assembly=ToDoListApp"
+             xmlns:helpers="clr-namespace:ToDoListApp.Helpers;assembly=ToDoListApp"
+             Title="Task list"
              x:Class="ToDoListApp.Pages.MainPage">
+
+    <NavigationPage.TitleView>
+        
+        <!--Sort fields-->
+        <StackLayout Orientation="Horizontal">
+            <Picker x:Name="SortFieldPicker"
+                    ItemsSource="{Binding SortFieldList}"
+                    ItemDisplayBinding="{Binding Name}"
+                    Title="Select sort field ..."
+                    TextColor="{StaticResource SecondaryColor}"
+                    TitleColor="{StaticResource SecondaryColor}"
+                    Margin="4,0">
+                <Picker.Effects>
+                    <xct:RemoveBorderEffect/>
+                </Picker.Effects>
+
+                <Picker.Behaviors>
+                    <xct:EventToCommandBehavior EventName="SelectedIndexChanged"
+                                                Command="{Binding ChangeSortFieldCommand}" 
+                                                CommandParameter="{Binding Source={x:Reference SortFieldPicker}, Path=SelectedItem}" />
+                </Picker.Behaviors>
+            </Picker>
+
+            <Label Style="{StaticResource SortAmountUpIconStyle}"
+                    Margin="10,0">
+                
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup>
+                        <VisualState x:Name="normal">
+                            <VisualState.StateTriggers>
+                                <StateTrigger IsActive="{Binding IsSortAscending, Converter={xct:InvertedBoolConverter}}"/>
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter Property="Style" Value="{StaticResource SortAmountDownIconStyle}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="done">
+                            <VisualState.StateTriggers>
+                                <StateTrigger IsActive="{Binding IsSortAscending}"/>
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter Property="Style" Value="{StaticResource SortAmountUpIconStyle}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+                
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ChangeSortDirectionCommand}"/>
+                </Label.GestureRecognizers>
+            </Label>
+
+        </StackLayout>
+
+    </NavigationPage.TitleView>
 
     <ContentPage.Content>
 
-        <Label Text="123"/>
+        <Grid RowDefinitions="*">
+
+            <StackLayout Grid.Row="0"
+                         xct:StateLayout.CurrentState="{Binding MainState}"
+                         xct:StateLayout.AnimateStateChanges="True"
+                         Margin="6,10"
+                         Padding="5,0">
+
+                <xct:StateLayout.StateViews>
+                    <xct:StateView StateKey="Loading"
+                                   VerticalOptions="FillAndExpand">
+                        <fragments:LoadingView></fragments:LoadingView>
+                    </xct:StateView>
+                    <xct:StateView StateKey="Empty"
+                                   VerticalOptions="FillAndExpand">
+                        <fragments:EmptyTaskListStateView />
+                    </xct:StateView>
+                </xct:StateLayout.StateViews>
+
+                <!--Task list-->
+                <CollectionView ItemSizingStrategy="MeasureFirstItem"
+                                SelectionMode="Single"
+                                SelectedItem="{Binding TaskListSelectedItem}"
+                                ItemsSource="{Binding TaskList}">
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+                                  ColumnDefinitions="Auto,Auto,*"
+                                  Margin="0,8">
+
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup Name="CommonStates">
+                                        <VisualState Name="Normal" >
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState Name="Selected">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+
+                                <!--Image-->
+                                <Image Source="{Binding ImagePath}"
+                                        Grid.Column="0"
+                                        Grid.RowSpan="4"
+                                        Aspect="AspectFit"
+                                        VerticalOptions="CenterAndExpand"
+                                        HeightRequest="60"/>
+
+                                <!--User name-->
+                                <Label Grid.Column="1"
+                                       Grid.Row="0"
+                                       Text="User name"
+                                       Style="{StaticResource LabelHeaderStyle}"/>
+                                <Label Grid.Column="2"
+                                       Grid.Row="0"
+                                       Text="{Binding UserName}"
+                                       Margin="10,0"/>
+                                
+                                <!--Email-->
+                                <Label Grid.Column="1"
+                                       Grid.Row="1"
+                                       Text="Email"
+                                       Style="{StaticResource LabelHeaderStyle}"/>
+                                <Label Grid.Column="2"
+                                       Grid.Row="1"
+                                       Text="{Binding Email}"
+                                       Margin="10,0"/>
+
+                                <!--Text-->
+                                <Label Grid.Column="1"
+                                       Grid.Row="2"
+                                       Text="Text"
+                                       Style="{StaticResource LabelHeaderStyle}"/>
+                                <Label Grid.Column="2"
+                                       Grid.Row="2"
+                                       Text="{Binding Text}"
+                                       Margin="10,0"/>
+
+                                <!--Status-->
+                                <Label Grid.Column="1"
+                                       Grid.Row="3"
+                                       Text="Status"
+                                       Style="{StaticResource LabelHeaderStyle}"/>
+                                <Label Grid.Column="2"
+                                       Grid.Row="3"
+                                       Text="{Binding StatusAsString}"
+                                       TextColor="{StaticResource StatusTextColor}"
+                                       Margin="10,0"/>
+
+                            </Grid>
+
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+
+                </CollectionView>
+
+                <!--Pagination list-->
+                <!--<CollectionView ItemSizingStrategy="MeasureFirstItem"
+                                SelectionMode="Single">
+
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout ItemSpacing="6" Orientation="Horizontal" />
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>-->
+
+            </StackLayout>
+
+
+        </Grid>
 
     </ContentPage.Content>
 

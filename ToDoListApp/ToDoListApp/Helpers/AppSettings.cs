@@ -10,13 +10,15 @@ namespace ToDoListApp.Helpers
             get
             {
                 if (Preferences.ContainsKey("AuthToken"))
-                {
                     return Preferences.Get("AuthToken", String.Empty);
-                }
 
                 return string.Empty;
             }
-            set => Preferences.Set("AuthToken", value);
+            set
+            {
+                Preferences.Set("AuthToken", value);
+                AuthTokenCreationDate = DateTime.Now;
+            }
         }
 
         public static DateTime AuthTokenCreationDate
@@ -24,9 +26,7 @@ namespace ToDoListApp.Helpers
             get
             {
                 if (Preferences.ContainsKey("AuthTokenCreationDate"))
-                {
                     return Preferences.Get("AuthTokenCreationDate", DateTime.MinValue);
-                }
                 else
                     return new DateTime();
             }

@@ -3,6 +3,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                     xmlns:styles="clr-namespace:ToDoListApp.Styles;assembly=ToDoListApp"
                     xmlns:iOsSpecific="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
+                    xmlns:helpers="clr-namespace:ToDoListApp.Helpers;assembly=ToDoListApp"
                     x:Class="ToDoListApp.Styles.Theme">
 
     <ResourceDictionary.MergedDictionaries>
@@ -10,15 +11,10 @@
         <styles:Fonts></styles:Fonts>
     </ResourceDictionary.MergedDictionaries>
 
-    <OnPlatform x:TypeArguments="x:Single" x:Key="CornerRadius">
-        <On Platform="Android" Value="12" />
-        <On Platform="iOS" Value="20" />
-    </OnPlatform>
-
     <!--Button-->
     <Style x:Key="ButtonBaseStyle" TargetType="Button">
-        <Setter Property="CornerRadius" Value="{StaticResource CornerRadius}" />
-        <Setter Property="TextTransform" Value="None" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="TextTransform" Value="Uppercase" />
         <Setter Property="HeightRequest" Value="50" />
         <Setter Property="Padding" Value="14" />
         <Setter Property="FontSize" Value="{StaticResource ButtonFontSize}" />
@@ -27,8 +23,31 @@
     <!--Labels-->
     <Style TargetType="Label">
         <Setter Property="TextColor" Value="{StaticResource PrimaryColor}" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="{StaticResource LabelFontSize}" />
         <Setter Property="TextDecorations" Value="None" />
+    </Style>
+
+    <Style x:Key="LabelHeaderStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="{StaticResource LabelFontSize}" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="Margin" Value="8,0" />
+    </Style>
+
+    <Style x:Key="SortAmountUpIconStyle" TargetType="Label">
+        <Setter Property="Text" Value="{x:Static helpers:FontAwesomeIcons.SortAmountUp}" />
+        <Setter Property="Margin" Value="4,0,0,0" />
+        <Setter Property="FontFamily" Value="FontAwesomeRegular" />
+        <Setter Property="FontSize" Value="{StaticResource IconFontSize}" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="TextColor" Value="{StaticResource SecondaryColor}" />
+    </Style>
+    <Style x:Key="SortAmountDownIconStyle" TargetType="Label">
+        <Setter Property="Text" Value="{x:Static helpers:FontAwesomeIcons.SortAmountDown}" />
+        <Setter Property="Margin" Value="4,0,0,0" />
+        <Setter Property="FontFamily" Value="FontAwesomeRegular" />
+        <Setter Property="FontSize" Value="{StaticResource IconFontSize}" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="TextColor" Value="{StaticResource SecondaryColor}" />
     </Style>
 
     <!--Grids-->

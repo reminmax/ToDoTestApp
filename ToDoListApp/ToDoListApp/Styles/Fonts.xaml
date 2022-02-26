@@ -8,5 +8,19 @@
         x:TypeArguments="x:Double"
         Android="14"
         iOS="14" />
+    
+    <OnPlatform
+        x:Key="LabelFontSize"
+        x:TypeArguments="x:Double"
+        Android="14"
+        iOS="14" />
+
+    <OnPlatform
+        x:Key="IconFontSize"
+        x:TypeArguments="x:Double"
+        Android="18"
+        iOS="18" />
+
+    
 
 </ResourceDictionary>

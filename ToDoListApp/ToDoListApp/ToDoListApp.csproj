@@ -15,12 +15,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Fonts\FontAwesomeRegular.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Fody" Version="6.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="FreshMvvm" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Polly" Version="7.2.3" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" />
     <PackageReference Include="Xamarin.CommunityToolkit" Version="2.0.0" />
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2337" />
@@ -28,13 +34,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
+    <EmbeddedResource Include="Resources\Fonts\FontAwesomeRegular.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Repositories\" />
+    <Folder Include="Resources\Fonts\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Pages\Fragments\EmptyTaskListStateView.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Pages\Fragments\LoadingView.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Update="Pages\LoginPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Pages\TaskPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="Styles\Colors.xaml">
