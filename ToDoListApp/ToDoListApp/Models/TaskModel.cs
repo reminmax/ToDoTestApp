@@ -1,14 +1,14 @@
-﻿using System;
-using FreshMvvm;
+﻿using FreshMvvm;
 using Newtonsoft.Json;
 using PropertyChanged;
-using ToDoListApp.Converters;
 
 namespace ToDoListApp.Models
 {
     [AddINotifyPropertyChangedInterface]
-    public class TaskModel : FreshBasePageModel, IEquatable<TaskModel>
+    public class TaskModel : FreshBasePageModel
     {
+        private string _imagePath;
+
         [JsonProperty("id")]
         public int Id { get; set; }
 
@@ -20,8 +20,6 @@ namespace ToDoListApp.Models
 
         [JsonProperty("text")]
         public string Text { get; set; }
-
-        private string _imagePath;
 
         [JsonProperty("image_path")]
         public string ImagePath
@@ -35,8 +33,7 @@ namespace ToDoListApp.Models
         }
 
         [JsonProperty("status")]
-        [JsonConverter(typeof(TaskStatusJsonConverter))]
-        public TaskStatuses Status { get; set; }
+        public int Status { get; set; }
 
         public string StatusAsString
         {
@@ -44,62 +41,13 @@ namespace ToDoListApp.Models
             {
                 return Status switch
                 {
-                    TaskStatuses.Created => "(0) Created",
-                    TaskStatuses.CreatedChangedByAdmin => "(1) Created and changed by admin",
-                    TaskStatuses.Done => "(10) Done",
-                    TaskStatuses.DoneChangedByAdmin => "(11) Done and changed by admin",
+                    0 => "(0) Not completed",
+                    1 => "(1) Not completed, changed by admin",
+                    10 => "(10) Completed",
+                    11 => "(11) Completed, changed by admin",
                     _ => "Unknown status"
                 };
             }
-        }
-
-        [JsonIgnore]
-        public bool IsDone
-        {
-            get => Status is TaskStatuses.Done or TaskStatuses.DoneChangedByAdmin;
-            set
-            {
-                if (value)
-                {
-                    Status = TaskStatuses.Done;
-                }
-                else
-                {
-                    Status = TaskStatuses.DoneChangedByAdmin;
-                }
-            }
-        }
-
-        public bool Equals(TaskModel other)
-        {
-            TaskModel taskObj = other as TaskModel;
-            if (taskObj == null)
-                return false;
-
-            return Id.Equals(taskObj.Id)
-                   && UserName.Equals(taskObj.UserName)
-                   && Email.Equals(taskObj.Email)
-                   && Text.Equals(taskObj.Text)
-                   && Status.Equals(taskObj.Status);
-        }
-
-        public static bool operator ==(TaskModel obj1, TaskModel obj2)
-        {
-            if (obj1 is null || obj2 is null)
-                return false;
-
-            return obj1.Id == obj2.Id
-                   && obj1.UserName == obj2.UserName
-                   && obj1.Email == obj2.Email
-                   && obj1.Text == obj2.Text
-                   && obj1.Status == obj2.Status;
-        }
-
-        public static bool operator !=(TaskModel obj1, TaskModel obj2) => !(obj1 == obj2);
-
-        public override int GetHashCode()
-        {
-            return Id.GetHashCode();
         }
     }
 }

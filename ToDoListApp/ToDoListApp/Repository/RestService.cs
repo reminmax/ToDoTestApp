@@ -1,18 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Polly;
-using Polly.Retry;
-using Polly.Timeout;
+using ToDoListApp.Converters;
+using ToDoListApp.Converters.ParsingStrategies;
 using ToDoListApp.Helpers;
 using ToDoListApp.Models;
 
@@ -20,9 +13,10 @@ namespace ToDoListApp.Repository
 {
     public class RestService : IRestService
     {
-        private HttpClient _httpClient;
         private readonly Uri _baseUri = new Uri(ConstantValues.BaseUri);
         private readonly string _developerName = ConstantValues.DeveloperName;
+        private readonly List<IParsingStrategy> _parsingStrategies;
+        private HttpClient _httpClient;
 
         public RestService()
         {
@@ -36,6 +30,14 @@ namespace ToDoListApp.Repository
 
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Parsing strategies
+            _parsingStrategies = new List<IParsingStrategy>()
+            {
+                new TasksParsingStrategy(),
+                new StringParsingStrategy(),
+                new DictionaryParsingStrategy()
+            };
         }
 
         public async Task<HttpResponseModel> GetTaskListAsync(string sortField, string sortDirection, int pageNumber)
@@ -45,41 +47,27 @@ namespace ToDoListApp.Repository
             builder.AddParameter("sort_field", sortField);
             builder.AddParameter("sort_direction", sortDirection);
             builder.AddParameter("page", pageNumber.ToString());
-
             var uri = builder.Uri;
 
             try
             {
                 using (var response = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead))
                 {
-                    if (response.StatusCode == HttpStatusCode.OK)
-                    {
-                        var stream = await response.Content.ReadAsStreamAsync();
-                        HttpResponseModel result = stream.ReadAndDeserializeFromJson<HttpResponseModel>();
-                        
-                        return result;
-                    }
-                    else
-                    {
-                        throw new Exception();
-                    }
+                    response.EnsureSuccessStatusCode();
+
+                    string content = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<HttpResponseModel>(content, new HttpResponseJsonConverter(_parsingStrategies));
+
+                    return result;
                 }
             }
-            catch (OperationCanceledException)
+            catch (HttpRequestException)
             {
                 return null;
             }
-            catch (HttpRequestException ex)
+            catch (Exception)
             {
                 return null;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-            finally
-            {
-
             }
         }
 
@@ -92,8 +80,7 @@ namespace ToDoListApp.Repository
                 throw new ArgumentNullException(nameof(password));
 
             var builder = new UriBuilderExt(string.Concat(_baseUri, ConstantValues.LoginUri));
-            //builder.AddParameter("developer", _developerName);
-
+            builder.AddParameter("developer", _developerName);
             var uri = builder.Uri;
 
             try
@@ -103,40 +90,106 @@ namespace ToDoListApp.Repository
                     formData.Add(new StringContent(userName), "\"username\"");
                     formData.Add(new StringContent(password), "\"password\"");
 
-                    AsyncRetryPolicy<HttpResponseMessage> httpRetryPolicy =
-                        Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                            .Or<TimeoutRejectedException>()
-                            .RetryAsync(2);
-
-                    AsyncTimeoutPolicy timeoutPolicy = Policy.TimeoutAsync(ConstantValues.HttpRequestDefaultTimeout);
-
-                    HttpResponseMessage response = await
-                        httpRetryPolicy.ExecuteAsync(() =>
-                            timeoutPolicy.ExecuteAsync(async token =>
-                                await _httpClient.PostAsync(uri, formData, token), CancellationToken.None));
+                    var response = await _httpClient.PostAsync(uri, formData);
 
                     response.EnsureSuccessStatusCode();
 
                     string content = await response.Content.ReadAsStringAsync();
-                    var result = JsonConvert.DeserializeObject<HttpResponseModel>(content);
+                    var result = JsonConvert.DeserializeObject<HttpResponseModel>(content, new HttpResponseJsonConverter(_parsingStrategies));
 
                     return result;
                 }
             }
-            catch (TimeoutRejectedException)
+            catch (HttpRequestException)
             {
-                // TODO
                 return null;
             }
-            catch (HttpRequestException ex)
+            catch (Exception)
             {
-                // TODO
-                //return new LoginModel(ex.Message, null);
                 return null;
             }
-            finally
-            {
+        }
 
+        public async Task<HttpResponseModel> AddNewTaskAsync(string userName, string email, string text)
+        {
+            if (string.IsNullOrEmpty(userName))
+                throw new ArgumentNullException(nameof(userName));
+
+            if (string.IsNullOrEmpty(email))
+                throw new ArgumentNullException(nameof(email));
+
+            if (string.IsNullOrEmpty(text))
+                throw new ArgumentNullException(nameof(text));
+
+            var builder = new UriBuilderExt(string.Concat(_baseUri, ConstantValues.AddNewTaskUri));
+            builder.AddParameter("developer", _developerName);
+            var uri = builder.Uri;
+
+            try
+            {
+                using (var formData = new MultipartFormDataContent())
+                {
+                    formData.Add(new StringContent(userName), "\"username\"");
+                    formData.Add(new StringContent(email), "\"email\"");
+                    formData.Add(new StringContent(text), "\"text\"");
+
+                    var response = await _httpClient.PostAsync(uri, formData);
+
+                    response.EnsureSuccessStatusCode();
+
+                    string content = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<HttpResponseModel>(content, new HttpResponseJsonConverter(_parsingStrategies));
+
+                    return result;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<HttpResponseModel> EditTaskAsync(int id, string text, int status)
+        {
+            if (id == 0)
+                throw new ArgumentNullException(nameof(id));
+
+            if (string.IsNullOrEmpty(text))
+                throw new ArgumentNullException(nameof(text));
+
+            var builder = new UriBuilderExt(string.Concat(_baseUri, ConstantValues.EditTaskUri, id.ToString()));
+            builder.AddParameter("developer", _developerName);
+            var uri = builder.Uri;
+
+            try
+            {
+                using (var formData = new MultipartFormDataContent())
+                {
+                    formData.Add(new StringContent(AppSettings.AuthToken), "\"token\"");
+                    formData.Add(new StringContent(text), "\"text\"");
+                    formData.Add(new StringContent(status.ToString()), "\"status\"");
+
+                    var response = await _httpClient.PostAsync(uri, formData);
+
+                    response.EnsureSuccessStatusCode();
+
+                    string content = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject<HttpResponseModel>(content, new HttpResponseJsonConverter(_parsingStrategies));
+
+                    return result;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
     }

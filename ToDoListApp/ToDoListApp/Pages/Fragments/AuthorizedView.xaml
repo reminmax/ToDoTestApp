@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<StackLayout xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ToDoListApp.Pages.Fragments.AuthorizedView"
+             HorizontalOptions="Center"
+             VerticalOptions="CenterAndExpand">
+
+    <Label Text="{Binding AuthorizedUserName, StringFormat='Hi, {0}!'}"
+           Style="{StaticResource LabelHeaderStyle}"/>
+
+    <Button Command="{Binding LogoutCommand}"
+            VerticalOptions="Start"
+            Margin="20"
+            Text="Log out"
+            Style="{StaticResource ButtonBaseStyle}"/>
+
+</StackLayout>

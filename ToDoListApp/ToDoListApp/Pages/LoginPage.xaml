@@ -3,13 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:xct="http://xamarin.com/schemas/2020/toolkit" 
              xmlns:fragments="clr-namespace:ToDoListApp.Pages.Fragments"
-             Title="Login"
+             Title="{Binding Title}"
              x:Class="ToDoListApp.Pages.LoginPage">
     
     <ContentPage.Content>
 
-        <Grid RowDefinitions="*,Auto"
-              Margin="12">
+        <Grid Margin="12">
 
             <StackLayout Grid.Row="0"
                          xct:StateLayout.CurrentState="{Binding MainState}"
@@ -19,6 +18,10 @@
                     <xct:StateView StateKey="Loading"
                                    VerticalOptions="FillAndExpand">
                         <fragments:LoadingView></fragments:LoadingView>
+                    </xct:StateView>
+                    <xct:StateView StateKey="Success"
+                                   VerticalOptions="FillAndExpand">
+                        <fragments:AuthorizedView></fragments:AuthorizedView>
                     </xct:StateView>
                 </xct:StateLayout.StateViews>
 
@@ -48,15 +51,19 @@
 
                 </StackLayout>
 
-            </StackLayout>
+                <!--Login button-->
+                <Button Command="{Binding LoginCommand}"
+                        VerticalOptions="Start"
+                        Text="Login"
+                        Style="{StaticResource ButtonBaseStyle}"/>
 
-            <!--Login button-->
-            <Button Grid.Row="1"
-                    Command="{Binding LoginCommand}"
-                    VerticalOptions="Start"
-                    Margin="20"
-                    Text="Login"
-                    Style="{StaticResource ButtonBaseStyle}"/>
+                <!--Next button-->
+                <Button Command="{Binding NavigateToMainPageCommand}"
+                        VerticalOptions="Start"
+                        Text="Continue without login"
+                        Style="{StaticResource ButtonBaseStyle}"/>
+
+            </StackLayout>
 
         </Grid>
 

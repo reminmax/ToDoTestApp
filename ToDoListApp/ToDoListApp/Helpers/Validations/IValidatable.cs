@@ -9,8 +9,8 @@ namespace ToDoListApp.Helpers.Validations
 
         List<string> Errors { get; set; }
 
-        bool Validate();
-
         bool IsValid { get; set; }
+
+        bool Validate();
     }
 }

@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using FreshMvvm;
 using PropertyChanged;
+using ToDoListApp.Helpers;
 using ToDoListApp.Models;
 using ToDoListApp.Repository;
 using Xamarin.CommunityToolkit.ObjectModel;
 using Xamarin.CommunityToolkit.UI.Views;
-using Xamarin.Forms;
 
 namespace ToDoListApp.PageModels
 {
@@ -19,20 +18,23 @@ namespace ToDoListApp.PageModels
     public class MainPageModel : FreshBasePageModel
     {
         private IRestService _restService { get; }
-        private TaskModel _taskListSelectedItem;
         private string _selectedSortField { get; set; }
+        private int _paginationListSelectedNumber = 1;
+        private int _totalTaskCount;
 
         public MainPageModel(IRestService restService)
         {
             _restService = restService;
 
             TaskList = new ObservableCollection<TaskModel>();
-            TaskList.CollectionChanged += TaskList_CollectionChanged;
-
             PaginationList = new ObservableCollection<PaginationListItem>();
 
+            AddNewTaskCommand = CommandFactory.Create(AddNewTaskAsync);
+            NavigateToLoginPageCommand = CommandFactory.Create(NavigateToLoginPageAsync);
             ChangeSortDirectionCommand = CommandFactory.Create(ChangeSortDirectionAsync);
-            ChangeSortFieldCommand = CommandFactory.Create<SoftFieldModel>(ChangeSortFieldCommandAsync);
+            ChangeSortFieldCommand = CommandFactory.Create<SortFieldModel>(ChangeSortFieldCommandAsync);
+            PaginationListSelectionChangedCommand = CommandFactory.Create<PaginationListItem>(ExecutePaginationListSelectionAsync);
+            TaskListSelectionChangedCommand = CommandFactory.Create<TaskModel>(OpenSelectedTaskAsync);
 
             FillSortFieldList();
 
@@ -43,62 +45,97 @@ namespace ToDoListApp.PageModels
 
         public ObservableCollection<PaginationListItem> PaginationList { get; private set; }
 
-        public List<SoftFieldModel> SortFieldList { get; private set; }
+        public SortFieldModel SelectedSortField { get; set; }
+
+        public List<SortFieldModel> SortFieldList { get; private set; }
+
+        public bool IsPaginationListVisible { get; private set; }
 
         public bool IsSortAscending { get; set; } = true;
 
         public LayoutState MainState { get; private set; }
 
-        public IAsyncCommand<SoftFieldModel> ChangeSortFieldCommand { get; }
+        public IAsyncCommand<SortFieldModel> ChangeSortFieldCommand { get; }
         public IAsyncCommand ChangeSortDirectionCommand { get; }
+        public IAsyncCommand AddNewTaskCommand { get; }
+        public IAsyncCommand NavigateToLoginPageCommand { get; }
+        public IAsyncCommand<PaginationListItem> PaginationListSelectionChangedCommand { get; }
 
-        public TaskModel TaskListSelectedItem
+        public IAsyncCommand<TaskModel> TaskListSelectionChangedCommand { get; }
+
+        private void TaskListCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            get => _taskListSelectedItem;
-            set
-            {
-                _taskListSelectedItem = value;
-                RaisePropertyChanged();
-
-                NavigateToTaskPageAsync(TaskListSelectedItem);
-            }
+            UpdatePaginationList();
         }
 
-        private void TaskList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void UpdatePaginationList()
         {
-            //if (!TaskList.Any())
-            //{
-            //    CategoriesList.Clear();
-            //    DisplayedTaskList.Clear();
-            //    return;
-            //}
+            PaginationList.Clear();
 
-            //UpdateCategoriesList();
+            if (!TaskList.Any()) return;
 
-            //// Update the displayed list based on the selected category
-            //UpdateDisplayedTaskList();
+            int taskItemsNumberPerPage = ConstantValues.TaskItemsNumberPerPage;
+            double itemsCount = (double)_totalTaskCount / taskItemsNumberPerPage;
+            int roundedItemsCount = (int)Math.Ceiling(itemsCount);
+
+            for (int i = 0; i < roundedItemsCount; i++)
+            {
+                PaginationList.Add(
+                    new PaginationListItem(i + 1, _paginationListSelectedNumber == i + 1));
+            }
         }
 
         private void FillSortFieldList()
         {
-            SortFieldList = new List<SoftFieldModel>()
+            SortFieldList = new List<SortFieldModel>()
             {
-                new SoftFieldModel("id", "Id"),
-                new SoftFieldModel("username", "User name"),
-                new SoftFieldModel("email", "Email"),
-                new SoftFieldModel("status", "Status"),
+                new SortFieldModel("id", "Id"),
+                new SortFieldModel("username", "User name"),
+                new SortFieldModel("email", "Email"),
+                new SortFieldModel("status", "Status"),
             };
 
-            //SelectedSortField = SortFieldList[0];
+            SelectedSortField = SortFieldList.First();
         }
 
-        private async Task ChangeSortFieldCommandAsync(SoftFieldModel item)
+        private async Task NavigateToLoginPageAsync()
         {
-            if (item is SoftFieldModel selectedItem)
+            await CoreMethods.PushPageModel<LoginPageModel>();
+        }
+
+        private async Task AddNewTaskAsync()
+        {
+            await CoreMethods.PushPageModel<TaskPageModel>(new TaskModel());
+        }
+
+        private async Task OpenSelectedTaskAsync(TaskModel taskModel)
+        {
+            if (!AppSettings.IsUserLoggedIn())
             {
-                _selectedSortField = selectedItem.Id;
-                await UpdateTaskListAsync();
+                await CoreMethods.DisplayAlert("Access denied",
+                    "Editing is allowed only to authorized user.",
+                    "OK");
+                return;
             }
+
+            await CoreMethods.PushPageModel<TaskPageModel>(taskModel);
+        }
+
+        private async Task ExecutePaginationListSelectionAsync(PaginationListItem item)
+        {
+            if (item is null) return;
+
+            _paginationListSelectedNumber = item.PageNumber;
+
+            await UpdateTaskListAsync();
+        }
+
+        private async Task ChangeSortFieldCommandAsync(SortFieldModel item)
+        {
+            if (item is null) return;
+
+            _selectedSortField = item.Id;
+            await UpdateTaskListAsync();
         }
 
         private async Task ChangeSortDirectionAsync()
@@ -108,61 +145,52 @@ namespace ToDoListApp.PageModels
             await UpdateTaskListAsync();
         }
 
-        private async void NavigateToTaskPageAsync(TaskModel taskModel)
-        {
-            await CoreMethods.PushPageModel<TaskPageModel>(taskModel);
-        }
-
         protected override async void ViewIsAppearing(object sender, EventArgs e)
         {
-            await UpdateTaskListAsync();
-
-            //UpdateTaskListAsync().ContinueWith((tResult) =>
-            //{
-            //    throw new Exception();
-            //}, TaskContinuationOptions.OnlyOnFaulted);
-
             base.ViewIsAppearing(sender, e);
+
+            await UpdateTaskListAsync();
         }
 
         private async Task UpdateTaskListAsync()
         {
             MainState = LayoutState.Loading;
+
             TaskList.Clear();
-            string methodName = "MainPageModel.UpdateTaskListAsync()";
 
             try
             {
                 var result = await _restService.GetTaskListAsync(sortField: _selectedSortField,
-                    sortDirection: IsSortAscending? "asc" : "desc");
+                    sortDirection: IsSortAscending ? "asc" : "desc",
+                    pageNumber: _paginationListSelectedNumber);
+
                 if (result is null)
-                {
-                    throw new ArgumentNullException(nameof(result), methodName);
-                }
+                    throw new ArgumentNullException(nameof(result));
 
                 if (result.Message is null)
-                {
-                    throw new ArgumentNullException(nameof(result.Message), methodName);
-                }
+                    throw new ArgumentNullException(nameof(result.Message));
 
                 var message = result.Message as List<TaskModel>;
                 if (message is null)
-                {
-                    throw new ArgumentException(methodName, nameof(message));
-                }
+                    throw new ArgumentException(nameof(message));
 
                 foreach (var item in message)
                 {
                     TaskList.Add(item);
                 }
+
+                _totalTaskCount = result.TotalTaskCount;
+                IsPaginationListVisible = _totalTaskCount > 0;
             }
             catch (Exception ex)
             {
-                await CoreMethods.DisplayAlert(methodName, ex.Message, "Ok");
+                await CoreMethods.DisplayAlert("Error", ex.Message, "Ok");
             }
             finally
             {
                 MainState = LayoutState.None;
+
+                UpdatePaginationList();
             }
         }
     }

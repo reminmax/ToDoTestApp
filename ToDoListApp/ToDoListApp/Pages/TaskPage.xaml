@@ -4,7 +4,7 @@
              xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
              xmlns:fragments="clr-namespace:ToDoListApp.Pages.Fragments;assembly=ToDoListApp"
              x:Class="ToDoListApp.Pages.TaskPage"
-             Title="Task">
+             Title="{Binding Title}">
 
     <ContentPage.Content>
 
@@ -31,6 +31,7 @@
                     <Label Text="User name"
                            Style="{StaticResource LabelHeaderStyle}"/>
                     <Entry Placeholder="Enter user name"
+                           IsEnabled="{Binding IsNewTask}"
                            Text="{Binding UserName.Value}"/>
 
                     <Label IsVisible="{Binding UserName.IsValid, Converter={xct:InvertedBoolConverter}}"
@@ -43,6 +44,7 @@
                     <Label Text="Email"
                            Style="{StaticResource LabelHeaderStyle}"/>
                     <Entry Placeholder="Enter email"
+                           IsEnabled="{Binding IsNewTask}"
                            Text="{Binding Email.Value}"/>
 
                     <Label IsVisible="{Binding Email.IsValid, Converter={xct:InvertedBoolConverter}}"
@@ -57,21 +59,18 @@
                     <Editor Placeholder="Enter some text"
                             Text="{Binding Text.Value}"
                             HeightRequest="120"/>
-
                     <Label IsVisible="{Binding Text.IsValid, Converter={xct:InvertedBoolConverter}}"
                            Text="{Binding Text.Errors, Converter={StaticResource FirstValidationErrorConverter}}"
                            TextColor="{StaticResource FailColor}" />
                 </StackLayout>
 
-                <!--Done switch-->
+                <!--Task status-->
                 <StackLayout Orientation="Horizontal">
-                    <!--<Switch IsToggled="{Binding IsDone, Mode=TwoWay}"
-                            VerticalOptions="Center"/>-->
-                    <Switch VerticalOptions="Center"/>
-                    <Label Text="Task has done"
+                    <Switch IsToggled="{Binding IsTaskCompleted, Mode=TwoWay}"
+                            VerticalOptions="Center"/>
+                    <Label Text="Task completed"
                            VerticalOptions="Center"
                            Style="{StaticResource LabelHeaderStyle}"/>
-
                 </StackLayout>
 
             </StackLayout>

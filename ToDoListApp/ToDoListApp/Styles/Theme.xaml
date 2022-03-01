@@ -14,6 +14,7 @@
     <!--Button-->
     <Style x:Key="ButtonBaseStyle" TargetType="Button">
         <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Margin" Value="14,2,14,2" />
         <Setter Property="TextTransform" Value="Uppercase" />
         <Setter Property="HeightRequest" Value="50" />
         <Setter Property="Padding" Value="14" />
@@ -35,7 +36,6 @@
 
     <Style x:Key="SortAmountUpIconStyle" TargetType="Label">
         <Setter Property="Text" Value="{x:Static helpers:FontAwesomeIcons.SortAmountUp}" />
-        <Setter Property="Margin" Value="4,0,0,0" />
         <Setter Property="FontFamily" Value="FontAwesomeRegular" />
         <Setter Property="FontSize" Value="{StaticResource IconFontSize}" />
         <Setter Property="VerticalTextAlignment" Value="Center" />

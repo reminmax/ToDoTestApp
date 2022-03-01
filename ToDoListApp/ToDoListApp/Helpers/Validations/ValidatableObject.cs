@@ -6,15 +6,10 @@ namespace ToDoListApp.Helpers.Validations
 {
     public class ValidatableObject<T> : IValidatable<T>
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public List<IValidationRule<T>> Validations { get; } = new List<IValidationRule<T>>();
-
-        public List<string> Errors { get; set; } = new List<string>();
+        T _value;
 
         public bool CleanOnChange { get; set; } = true;
 
-        T _value;
         public T Value
         {
             get => _value;
@@ -26,6 +21,12 @@ namespace ToDoListApp.Helpers.Validations
                     IsValid = true;
             }
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public List<IValidationRule<T>> Validations { get; } = new List<IValidationRule<T>>();
+
+        public List<string> Errors { get; set; } = new List<string>();
 
         public bool IsValid { get; set; } = true;
 
@@ -39,8 +40,9 @@ namespace ToDoListApp.Helpers.Validations
             Errors = errors.ToList();
             IsValid = !Errors.Any();
 
-            return this.IsValid;
+            return IsValid;
         }
+
         public override string ToString()
         {
             return $"{Value}";

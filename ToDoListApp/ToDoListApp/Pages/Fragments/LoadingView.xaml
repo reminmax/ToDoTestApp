@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ToDoListApp.Pages.Fragments.LoadingView"
              HorizontalOptions="Center"
-             VerticalOptions="Center">
+             VerticalOptions="CenterAndExpand">
 
     <ActivityIndicator
         Color="{StaticResource PrimaryColor}"

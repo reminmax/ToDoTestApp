@@ -5,6 +5,18 @@ namespace ToDoListApp.Helpers
 {
     public static class AppSettings
     {
+        public static string UserName
+        {
+            get
+            {
+                if (Preferences.ContainsKey("UserName"))
+                    return Preferences.Get("UserName", String.Empty);
+
+                return string.Empty;
+            }
+            set => Preferences.Set("UserName", value);
+        }
+
         public static string AuthToken
         {
             get
@@ -17,7 +29,11 @@ namespace ToDoListApp.Helpers
             set
             {
                 Preferences.Set("AuthToken", value);
-                AuthTokenCreationDate = DateTime.Now;
+
+                if (!string.IsNullOrEmpty(value))
+                    AuthTokenCreationDate = DateTime.Now;
+                else
+                    AuthTokenCreationDate = DateTime.MinValue;
             }
         }
 
@@ -34,7 +50,7 @@ namespace ToDoListApp.Helpers
         }
 
         public static bool IsUserLoggedIn() =>
-            AuthToken != string.Empty &&
-            AuthTokenCreationDate.AddHours(ConstantValues.TokenExpirationTimeHours) <= DateTime.Now;
+            !string.IsNullOrEmpty(AuthToken) &
+            AuthTokenCreationDate.AddHours(ConstantValues.TokenExpirationTimeHours) >= DateTime.Now;
     }
 }

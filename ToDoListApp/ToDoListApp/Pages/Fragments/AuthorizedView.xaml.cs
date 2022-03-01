@@ -1,13 +1,12 @@
-﻿
-using Xamarin.Forms;
+﻿using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
-namespace ToDoListApp.Pages
+namespace ToDoListApp.Pages.Fragments
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class TaskPage : ContentPage
+    public partial class AuthorizedView : StackLayout
     {
-        public TaskPage()
+        public AuthorizedView()
         {
             InitializeComponent();
         }

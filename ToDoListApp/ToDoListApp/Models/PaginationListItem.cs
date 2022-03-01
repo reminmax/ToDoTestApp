@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ToDoListApp.Models
+﻿namespace ToDoListApp.Models
 {
-    public class PaginationListItem
+    public sealed class PaginationListItem
     {
+        public PaginationListItem(int pageNumber, bool isSelected)
+        {
+            PageNumber = pageNumber;
+            IsSelected = isSelected;
+        }
+
         public int PageNumber { get; set; }
+        public bool IsSelected { get; set; }
     }
 }

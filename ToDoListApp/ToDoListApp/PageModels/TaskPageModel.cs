@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using FreshMvvm;
 using PropertyChanged;
+using ToDoListApp.Helpers;
 using ToDoListApp.Helpers.Validations;
 using ToDoListApp.Helpers.Validations.Rules;
 using ToDoListApp.Models;
@@ -15,44 +15,58 @@ namespace ToDoListApp.PageModels
     [AddINotifyPropertyChangedInterface]
     public class TaskPageModel : FreshBasePageModel
     {
-        private int _id;
-        private IRestService _restService { get; }
+        private TaskModel _task;
 
         public TaskPageModel(IRestService restService)
         {
             _restService = restService;
 
-            CreateTaskCommand = new FreshAwaitCommand(CreateTaskCommandHandler);
+            _task = new TaskModel();
 
             AddValidationRules();
         }
+
+        private IRestService _restService { get; }
 
         public ValidatableObject<string> UserName { get; set; }
         public ValidatableObject<string> Email { get; set; }
         public ValidatableObject<string> Text { get; set; }
 
-        public FreshAwaitCommand CreateTaskCommand { get; }
+        public string Title { get; private set; }
 
         public LayoutState MainState { get; set; }
 
+        public bool IsNewTask => _task.Id == 0;
+        public bool IsTaskCompleted { get; set; }
+
+        public ICommand CreateTaskCommand
+        {
+            get
+            {
+                return new FreshAwaitCommand(async (tcs) =>
+                {
+                    await CreateOrUpdateTaskAsync();
+                    tcs.SetResult(true);
+                });
+            }
+        }
+
         public override void Init(object initData)
         {
-            if (initData is null)
-            {
-                throw new ArgumentNullException(nameof(initData), "TaskPageModel.Init() parameter");
-            }
-
-            if (initData is not TaskModel taskModel)
-            {
-                throw new ArgumentException("Incorrect type parameter in TaskPageModel.Init()", nameof(initData));
-            }
-
-            UserName.Value = taskModel.UserName;
-            Email.Value = taskModel.Email;
-            Text.Value = taskModel.Text;
-            _id = taskModel.Id;
-
             base.Init(initData);
+
+            if (initData is TaskModel taskModel)
+            {
+                _task = taskModel;
+
+                UserName.Value = taskModel.UserName;
+                Email.Value = taskModel.Email;
+                Text.Value = taskModel.Text;
+                _task.Status = taskModel.Status;
+
+                IsTaskCompleted = taskModel.Status >= 10;
+                Title = _task.Id == 0 ? "Add new task" : "Edit task";
+            }
         }
 
         private void AddValidationRules()
@@ -76,31 +90,39 @@ namespace ToDoListApp.PageModels
             return isUserNameValid && isEmailValid && isTextValid;
         }
 
-        private async void CreateTaskCommandHandler(TaskCompletionSource<bool> obj)
+        private async ValueTask CreateOrUpdateTaskAsync()
         {
-            await CreateTaskCommandHandler();
-            obj.SetResult(true);
+            if (!AreFieldsValid()) return;
+
+            if (IsNewTask)
+                await CreateTaskAsync();
+            else
+                await UpdateTaskAsync();
         }
 
-        private async ValueTask CreateTaskCommandHandler()
+        private async ValueTask CreateTaskAsync()
         {
-            if (!AreFieldsValid())
-            {
-                return;
-            }
-
             MainState = LayoutState.Loading;
 
             try
             {
-                bool isNewTask = _id ==0;
+                HttpResponseModel result = await _restService.AddNewTaskAsync(UserName.Value, Email.Value, Text.Value);
 
+                if (result is null)
+                    throw new ArgumentNullException(nameof(result));
 
+                if (result.Status != ConstantValues.SuccessStatusString)
+                {
+                    await CoreMethods.DisplayAlert("Error", HttpResponseModel.GetMessageAsString(result.Message), "OK");
+                    return;
+                }
+
+                await CoreMethods.DisplayAlert("Info", "New task was successfully saved!", "Ok");
+                await CoreMethods.PopPageModel();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e);
-                throw;
+                await CoreMethods.DisplayAlert("Error", ex.Message, "Ok");
             }
             finally
             {
@@ -108,5 +130,49 @@ namespace ToDoListApp.PageModels
             }
         }
 
+        private int GetNewTaskStatus()
+        {
+            bool textHasChanged = _task.Text != Text.Value;
+            bool statusHasChanged = IsTaskCompleted
+                ? (_task.Status == 0 || _task.Status == 1)
+                : (_task.Status == 10 || _task.Status == 11);
+
+            bool somethingHasChanged = textHasChanged || statusHasChanged;
+
+            return !IsTaskCompleted
+                ? 0 + (somethingHasChanged ? 1 : 0)
+                : 10 + (somethingHasChanged ? 1 : 0);
+        }
+
+        private async ValueTask UpdateTaskAsync()
+        {
+            MainState = LayoutState.Loading;
+
+            int newStatus = GetNewTaskStatus();
+
+            try
+            {
+                HttpResponseModel result = await _restService.EditTaskAsync(_task.Id, Text.Value, newStatus);
+
+                if (result is null)
+                    throw new ArgumentNullException(nameof(result));
+
+                if (result.Status != ConstantValues.SuccessStatusString)
+                {
+                    await CoreMethods.DisplayAlert("Error", HttpResponseModel.GetMessageAsString(result.Message), "OK");
+                    return;
+                }
+
+                await CoreMethods.PopPageModel();
+            }
+            catch (Exception ex)
+            {
+                await CoreMethods.DisplayAlert("Error", ex.Message, "Ok");
+            }
+            finally
+            {
+                MainState = LayoutState.None;
+            }
+        }
     }
 }

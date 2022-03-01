@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
-using ToDoListApp.Converters;
+using System.Linq;
 
 namespace ToDoListApp.Models
 {
-    [JsonConverter(typeof(HttpResponseJsonConverter))]
     public class HttpResponseModel
     {
         public dynamic Message { get; set; }
@@ -14,5 +11,15 @@ namespace ToDoListApp.Models
         public string Status { get; set; }
 
         public int TotalTaskCount { get; set; }
+
+        public static string GetMessageAsString(dynamic message)
+        {
+            if (message is string stringMessage) return stringMessage;
+
+            if (message is Dictionary<string, string> dictionary)
+                return string.Join(Environment.NewLine, dictionary.Values.Select(p => p));
+
+            return string.Empty;
+        }
     }
 }
